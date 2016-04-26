@@ -1,0 +1,2 @@
+# Verify build fails when there are unverified files
+-> verify

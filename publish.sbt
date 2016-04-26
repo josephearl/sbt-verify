@@ -1,0 +1,1 @@
+bintrayRepository := "sbt-plugins"

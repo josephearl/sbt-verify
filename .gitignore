@@ -1,0 +1,15 @@
+.cache
+.history
+.target
+.classpath
+.project
+bin/
+.settings
+target/
+.scala_dependencies
+project/target/
+project/project/
+project/plugins/project/
+project/plugins/target/
+.idea*
+*.iml

@@ -1,0 +1,2 @@
+# Verify build fails due to unverified scala dependency
+-> verify
