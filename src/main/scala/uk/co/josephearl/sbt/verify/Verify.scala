@@ -74,6 +74,7 @@ object Verify {
       "  warnOnUnverifiedFiles = %s,\n".format(options.warnOnUnverifiedFiles) +
       "  warnOnUnusedVerifications = %s\n".format(options.warnOnUnusedVerifications) +
       ")\n"
+    log.debug("Writing verification file:" + System.lineSeparator + content)
     write(outputFile, content)
   }
 

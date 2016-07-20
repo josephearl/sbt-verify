@@ -34,11 +34,11 @@ final case class VerifyID(module: sbt.ModuleID, hash: String, algorithm: HashAlg
     }
   }
 
-  def asSbtSettingString: String = "\"%s\" %% \"%s\" %% \"%s\" %s \"%s\"".format(module.organization, module.name, module.revision, algorithm.algorithm, hash)
+  def asSbtSettingString: String = "\"%s\" %% \"%s\" %% \"%s\" %s \"%s\"".format(module.organization.replace("\\", "\\\\"), module.name, module.revision, algorithm.algorithm, hash)
 
   private def matchesOrganization(file: File): Boolean = {
     file.getAbsolutePath.contains(module.organization) ||
-      (VerifyUtils.isScalaLibraryFile(file) && module.organization == "org.scala-lang" && file.getAbsolutePath.contains("/global/boot/"))
+      (VerifyUtils.isScalaLibraryFile(file) && module.organization == "org.scala-lang" && file.getAbsolutePath.contains(s"${File.separator}global${File.separator}boot${File.separator}"))
   }
 
   private def matchesName(file: File): Boolean = {
@@ -77,7 +77,7 @@ object VerifyID {
   }
 
   private def inIvyCache(path: String, in: Int => String): Option[String] = {
-    val ivyCacheDir: String = "ivy2/cache/"
+    val ivyCacheDir: String = s"ivy2${File.separator}cache${File.separator}"
     path.lastIndexOf(ivyCacheDir) match {
       case -1     => None
       case x: Int => Some(in(x + ivyCacheDir.length))
@@ -85,11 +85,11 @@ object VerifyID {
   }
 
   private def ivyCacheOrganization(path: String, x: Int): String = {
-    path.substring(x, path.indexOf('/', x))
+    path.substring(x, path.indexOf(File.separator, x))
   }
 
   private def ivyCacheName(path: String, x: Int): String = {
-    path.substring(path.indexOf('/', x) + 1, path.indexOf('/', path.indexOf('/', x) + 1))
+    path.substring(path.indexOf(File.separator, x) + 1, path.indexOf(File.separator, path.indexOf(File.separator, x) + 1))
       .replaceFirst("_(\\d+\\.)?(\\d+\\.)?(\\d+)$", "")
   }
 
