@@ -1,4 +1,4 @@
-# sbt-verify [![Build Status](https://travis-ci.org/JosephEarl/sbt-verify.svg?branch=master)](https://travis-ci.org/JosephEarl/sbt-verify)
+# sbt-verify [![Linux Build Status](https://travis-ci.org/JosephEarl/sbt-verify.svg?branch=master)](https://travis-ci.org/JosephEarl/sbt-verify) [![Windows Build status](https://ci.appveyor.com/api/projects/status/8id30yqxiecak5qu?svg=true)](https://ci.appveyor.com/project/JosephEarl/sbt-verify)
 
 An SBT 0.13+ plugin that verifies the integrity of downloaded dependencies, similar to [gradle-witness](https://github.com/WhisperSystems/gradle-witness).
 

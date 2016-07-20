@@ -1,3 +1,5 @@
+logLevel := Level.Debug
+
 name := "verify-scala"
 
 organization := "uk.co.josephearl"
