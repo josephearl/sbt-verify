@@ -8,8 +8,8 @@
  */
 package uk.co.josephearl.sbt.verify
 
-import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 import sbt._
+import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 
 trait VerifyKeys {
   // tasks

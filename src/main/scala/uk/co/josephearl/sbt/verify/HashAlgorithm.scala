@@ -13,7 +13,10 @@ import java.security.MessageDigest
 
 import sbt.IO
 
+import scala.language.implicitConversions
+
 object HashAlgorithm extends Enumeration {
+
   protected case class Val(algorithm: String) extends super.Val {
     def fileContentHash(file: File): String = {
       val content = IO.readBytes(file)
@@ -28,6 +31,7 @@ object HashAlgorithm extends Enumeration {
       b.map("%02X" format _).mkString.toLowerCase
     }
   }
+
   implicit def valueToHashAlgorithmVal(v: Value): Val = v.asInstanceOf[Val]
 
   type HashAlgorithm = Val

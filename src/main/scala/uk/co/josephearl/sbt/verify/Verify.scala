@@ -8,15 +8,15 @@
  */
 package uk.co.josephearl.sbt.verify
 
-import java.io.{PrintWriter, File}
+import java.io.{File, PrintWriter}
 
-import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
-import sbt._
 import sbt.Keys.Classpath
+import sbt._
+import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 
 object Verify {
   def verify(jars: Seq[File], verifications: Seq[VerifyID],
-    options: VerifyOptions, log: Logger): Unit = {
+             options: VerifyOptions, log: Logger): Unit = {
     var remaining: Seq[VerifyID] = verifications
     val verified: Seq[Tuple2[File, VerifyID]] = jars.flatMap(f => {
       val matchingVerifications = remaining.filter(v => v.shouldVerifyFile(f, log))
@@ -25,8 +25,8 @@ object Verify {
           verifyId.verifyFile(f, options, log)
           remaining = verifications diff Seq(verifyId)
           Some(f, verifyId)
-        case Nil           => None
-        case _             => None
+        case Nil => None
+        case _ => None
       }
     })
 
@@ -39,7 +39,7 @@ object Verify {
 
       val message = s"${jars.size - verified.size} unverified files\n"
       options.warnOnUnverifiedFiles match {
-        case true  => log.warn(message)
+        case true => log.warn(message)
         case false => sys.error(message)
       }
     }
@@ -51,14 +51,14 @@ object Verify {
 
       val message = s"${verifications.size - verified.size} unused verifications"
       options.warnOnUnusedVerifications match {
-        case true  => log.warn(message)
+        case true => log.warn(message)
         case false => sys.error(message)
       }
     }
   }
 
   def verifyGenerate(jars: Seq[File], outputFile: File, algorithm: HashAlgorithm,
-    options: VerifyOptions, projectBase: File, log: Logger): File = {
+                     options: VerifyOptions, projectBase: File, log: Logger): File = {
     val verifications: Seq[VerifyID] = jars.map(VerifyID.fromFile(_, algorithm, projectBase))
     val content = "verifyDependencies in verify ++= Seq(\n" +
       verifications.map(v => "  %s".format(v.asSbtSettingString)).mkString(",\n") +
@@ -68,9 +68,9 @@ object Verify {
       "  includeScala = %s,\n".format(options.includeScala) +
       "  includeDependency = %s,\n".format(options.includeDependency) +
       "  excludedJars = %s,\n".format(options.excludedJars match {
-          case Nil => "Nil"
-          case x: Classpath => "Seq(" + x.map(_.data.getPath).map("File(%s)".format(_)).mkString(", ") + ")"
-        }) +
+        case Nil => "Nil"
+        case x: Classpath => "Seq(" + x.map(_.data.getPath).map("File(%s)".format(_)).mkString(", ") + ")"
+      }) +
       "  warnOnUnverifiedFiles = %s,\n".format(options.warnOnUnverifiedFiles) +
       "  warnOnUnusedVerifications = %s\n".format(options.warnOnUnusedVerifications) +
       ")\n"
@@ -79,13 +79,15 @@ object Verify {
   }
 
   def verifyJars(classpath: Classpath, dependencies: Classpath,
-    options: VerifyOptions, log: Logger): Seq[File] = {
+                 options: VerifyOptions, log: Logger): Seq[File] = {
     import sbt.classpath.ClasspathUtilities
 
     val (libs, dirs) = classpath.toVector.partition(c => ClasspathUtilities.isArchive(c.data))
 
     val depLibs = dependencies.map(_.data).toSet.filter(ClasspathUtilities.isArchive)
-    val excludedJars = options.excludedJars map {_.data}
+    val excludedJars = options.excludedJars map {
+      _.data
+    }
     val jars = libs flatMap {
       case jar if excludedJars contains jar.data.asFile => None
       case jar if VerifyUtils.isScalaLibraryFile(jar.data.asFile) =>
@@ -95,7 +97,7 @@ object Verify {
       case jar =>
         if (options.includeBin) Some(jar) else None
     }
-    jars map(_.data)
+    jars map (_.data)
   }
 
   private def fileHashString(file: File): String = {
