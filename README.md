@@ -118,3 +118,7 @@ verifyAlgorithm in verifyGenerate := HashAlgorithm.MD5
 * *Tasks:* `verifyGenerate`
 * *Accepts:* `HashAlgorithm.{SHA1, MD5}`
 * *Default:* `HashAlgorithm.SHA1`
+
+## Related projects
+
+* [sbt/sbt-pgp](https://github.com/sbt/sbt-pgp) - Validate the PGP signatures of your dependencies
