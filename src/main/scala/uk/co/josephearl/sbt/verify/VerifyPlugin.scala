@@ -13,17 +13,24 @@ import sbt.Keys._
 import sbt._
 
 object VerifyPlugin extends AutoPlugin {
+
   object autoImport extends VerifyKeys {
     def verifyTask(key: TaskKey[Unit]): Initialize[Task[Unit]] = VerifyPlugin.verifyTask(key)
+
     def verifyGenerateTask(key: TaskKey[File]): Initialize[Task[File]] = VerifyPlugin.verifyGenerateTask(key)
+
     def verifyJarsTask[T](key: TaskKey[T]): Initialize[Task[Seq[File]]] = VerifyPlugin.verifyJarsTask(key)
-    implicit def verifyToRichModuleID(m: sbt.ModuleID): RichModuleID = RichModuleID.toRichModuleID(m)
+
+    implicit def verifyToRichGroupArtifactID(g: sbt.impl.GroupArtifactID): RichGroupArtifactID = RichGroupArtifactID.from(g)
+
+    implicit def verifyToRichGroupArtifactID(m: sbt.ModuleID): RichGroupArtifactID = RichGroupArtifactID.from(m)
+
     val VerifyOptions = uk.co.josephearl.sbt.verify.VerifyOptions
     val VerifyID = uk.co.josephearl.sbt.verify.VerifyID
     val baseVerifySettings = VerifyPlugin.baseVerifySettings
   }
 
-  import autoImport.{ verifyTask => _, verifyJarsTask => _, baseVerifySettings => _, _ }
+  import autoImport.{baseVerifySettings => _, verifyJarsTask => _, verifyTask => _, _}
 
   def verifyTask(key: TaskKey[Unit]): Initialize[Task[Unit]] = Def.task {
     val t = (test in key).value

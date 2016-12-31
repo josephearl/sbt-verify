@@ -12,15 +12,15 @@ import java.io.File
 import java.nio.file.Paths
 
 import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
-import sbt.{ModuleID, Logger}
+import sbt.Logger
 
-final case class VerifyID(module: sbt.ModuleID, hash: String, algorithm: HashAlgorithm = HashAlgorithm.SHA1) {
+final case class VerifyID(organization: String, name: String, hash: String, algorithm: HashAlgorithm = HashAlgorithm.SHA1) {
   def algorithm(algorithm: String): VerifyID = this.copy(algorithm = HashAlgorithm.withName(algorithm))
 
   def algorithm(algorithm: HashAlgorithm): VerifyID = this.copy(algorithm = algorithm)
 
   def shouldVerifyFile(file: File, log: Logger): Boolean = {
-    matchesOrganization(file) && matchesName(file) && matchesRevision(file)
+    matchesOrganization(file) && matchesName(file)
   }
 
   def verifyFile(file: File, options: VerifyOptions, log: Logger): Boolean = {
@@ -34,19 +34,15 @@ final case class VerifyID(module: sbt.ModuleID, hash: String, algorithm: HashAlg
     }
   }
 
-  def asSbtSettingString: String = "\"%s\" %% \"%s\" %% \"%s\" %s \"%s\"".format(module.organization.replace("\\", "\\\\"), module.name, module.revision, algorithm.algorithm, hash)
+  def asSbtSettingString: String = "\"%s\" %% \"%s\" %s \"%s\"".format(organization.replace("\\", "\\\\"), name, algorithm.algorithm, hash)
 
   private def matchesOrganization(file: File): Boolean = {
-    file.getAbsolutePath.contains(module.organization) ||
-      (VerifyUtils.isScalaLibraryFile(file) && module.organization == "org.scala-lang" && file.getAbsolutePath.contains(s"${File.separator}global${File.separator}boot${File.separator}"))
+    file.getAbsolutePath.contains(organization) ||
+      (VerifyUtils.isScalaLibraryFile(file) && organization == "org.scala-lang" && file.getAbsolutePath.contains(s"${File.separator}global${File.separator}boot${File.separator}"))
   }
 
   private def matchesName(file: File): Boolean = {
-    file.getName.contains(module.name)
-  }
-
-  private def matchesRevision(file: File): Boolean = {
-    file.getName.contains(module.revision) || file.getAbsolutePath.contains(module.revision)
+    file.getName.contains(name)
   }
 }
 
@@ -55,7 +51,8 @@ object VerifyID {
     val path = file.getParentFile.getAbsolutePath
     val filename = file.getName
     VerifyID(
-      ModuleID(toOrganization(path, projectBase.getAbsolutePath), toName(path, filename), toRevision(path, filename)),
+      toOrganization(path, projectBase.getAbsolutePath),
+      toName(path, filename),
       algorithm.fileContentHash(file),
       algorithm
     )
@@ -69,11 +66,6 @@ object VerifyID {
   private def toName(path: String, filename: String): String = {
     inIvyCache(path, ivyCacheName(path, _))
       .getOrElse(filenameName(filename))
-  }
-
-  private def toRevision(path: String, filename: String): String = {
-    inIvyCache(path, _ => ivyCacheRevision(filename))
-      .getOrElse(filenameRevision(filename))
   }
 
   private def inIvyCache(path: String, in: Int => String): Option[String] = {
@@ -93,17 +85,8 @@ object VerifyID {
       .replaceFirst("_(\\d+\\.)?(\\d+\\.)?(\\d+)$", "")
   }
 
-  private def ivyCacheRevision(filename: String): String = {
-    stripExtension(filename).substring(stripExtension(filename).lastIndexOf('-') + 1)
-  }
-
   private def filenameName(filename: String): String = {
     stripVersion(stripExtension(filename))
-  }
-
-  private def filenameRevision(filename: String): String = stripExtension(filename).lastIndexOf('-') match {
-    case -1 => ""
-    case _  => ivyCacheRevision(filename)
   }
 
   private def stripExtension(filename: String): String = filename.lastIndexOf('.') match {

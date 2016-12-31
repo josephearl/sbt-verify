@@ -30,8 +30,8 @@ scalaVersion = "2.10.4"
 libraryDependencies += "com.google.code.gson" % "gson" % "2.6.2"
 
 verifyDependencies in verify ++= Seq(
-  "org.scala-lang" % "scala-library" % "2.10.4" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
-  "com.google.code.gson" % "gson" % "2.6.2" sha1 "17484370291d4a8191344ec4930a1c655b1d15e2"
+  "org.scala-lang" % "scala-library" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
+  "com.google.code.gson" % "gson" sha1 "17484370291d4a8191344ec4930a1c655b1d15e2"
 )
 ```
 
@@ -62,8 +62,8 @@ To verify your project's dependencies first list all of your dependencies togeth
 
 ```scala
 verifyDependencies in verify ++= Seq(
-  "org.scala-lang" % "scala-library" % "2.10.4" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
-  "com.google.guava" % "guava" % "19.0" sha1 "6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9"
+  "org.scala-lang" % "scala-library" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
+  "com.google.guava" % "guava" sha1 "6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9"
 )
 ```
 
