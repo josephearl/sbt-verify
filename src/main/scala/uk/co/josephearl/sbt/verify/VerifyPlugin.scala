@@ -33,7 +33,6 @@ object VerifyPlugin extends AutoPlugin {
   import autoImport.{baseVerifySettings => _, verifyJarsTask => _, verifyTask => _, _}
 
   def verifyTask(key: TaskKey[Unit]): Initialize[Task[Unit]] = Def.task {
-    val t = (test in key).value
     val s = (streams in key).value
     Verify.verify(
       (verifyJars in key).value,
@@ -43,7 +42,6 @@ object VerifyPlugin extends AutoPlugin {
   }
 
   def verifyGenerateTask(key: TaskKey[File]): Initialize[Task[File]] = Def.task {
-    val t = (test in key).value
     val s = (streams in key).value
     Verify.verifyGenerate(
       (verifyJars in key).value,
@@ -68,7 +66,6 @@ object VerifyPlugin extends AutoPlugin {
     verify := verifyTask(verify).value,
     verifyDependencies in verify := Nil,
     verifyJars in verify := verifyJarsTask(verify).value,
-    test in verify := (test in Test).value,
     verifyOptions in verify := VerifyOptions(
       includeBin = true,
       includeScala = true,
@@ -83,7 +80,6 @@ object VerifyPlugin extends AutoPlugin {
     verifyOutputFile in verifyGenerate := crossTarget(_ / "verify.sbt").value,
     verifyAlgorithm in verifyGenerate := HashAlgorithm.SHA1,
     verifyJars in verifyGenerate := verifyJarsTask(verifyGenerate).value,
-    test in verifyGenerate := (test in Test).value,
     verifyOptions in verifyGenerate := VerifyOptions(
       includeBin = true,
       includeScala = true,
