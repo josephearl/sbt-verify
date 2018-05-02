@@ -1,8 +1,8 @@
 # sbt-verify [![Linux Build Status](https://travis-ci.org/josephearl/sbt-verify.svg?branch=master)](https://travis-ci.org/josephearl/sbt-verify) [![Windows Build status](https://ci.appveyor.com/api/projects/status/8id30yqxiecak5qu?svg=true)](https://ci.appveyor.com/project/josephearl/sbt-verify)
 
-An SBT 0.13+ plugin that verifies the integrity of downloaded dependencies, similar to [gradle-witness](https://github.com/WhisperSystems/gradle-witness).
+An sbt 1.x plugin that verifies the integrity of downloaded dependencies, similar to [gradle-witness](https://github.com/WhisperSystems/gradle-witness).
 
-SBT allows you to easily use remote dependencies without having to check them into your source tree by specifying `libraryDependencies`:
+sbt allows you to easily use remote dependencies without having to check them into your source tree by specifying `libraryDependencies`:
 
 ```scala
 libraryDependencies += "com.google.code.gson" % "gson" % "2.6.2"
@@ -19,13 +19,13 @@ gson-2.6.2.pom.md5
 gson-2.6.2.pom.sha1
 ```
 
-When SBT/Ivy downloads the artifact it also retrieves the checksum files for each file and verifies that the downloaded file matches the SHA1/MD5 stored in the checksum file.
+When sbt/Ivy downloads the artifact it also retrieves the checksum files for each file and verifies that the downloaded file matches the SHA1/MD5 stored in the checksum file.
 However this serves only to verify that the file was downloaded correctly - if someone is able to compromise the remote Maven repository they could easily alter the MD5 and SHA1 checksum values the repository advertises as well as the artifact itself.
 
 The sbt-verify allows you to statically specify the SHA1 or MD5 checksum that a dependency should match through the `verifyDependencies` setting:
 
 ```scala
-scalaVersion = "2.10.4"
+scalaVersion = "2.12.5"
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.6.2"
 
@@ -35,7 +35,7 @@ verifyDependencies in verify ++= Seq(
 )
 ```
 
-Running the SBT task `verify` will check that all of the project's dependencies have the correct checksums.
+Running the sbt task `verify` will check that all of the project's dependencies have the correct checksums.
 If there's a mismatch, or a checksum is a missing for a file the build is failed, preventing an attacker undetectably modifying artifacts.
 
 ## Getting started
@@ -51,7 +51,7 @@ sbt publishLocal
 Add sbt-verify as a plugin in your project's `project/plugins.sbt`:
 
 ```scala
-addSbtPlugin("uk.co.josephearl" % "sbt-verify" % "0.2.1")
+addSbtPlugin("uk.co.josephearl" % "sbt-verify" % "0.3.0")
 ```
 
 ## Usage

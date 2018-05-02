@@ -9,7 +9,7 @@
 package uk.co.josephearl.sbt.verify
 
 import sbt.ModuleID
-import sbt.impl.GroupArtifactID
+import sbt.librarymanagement.DependencyBuilders.OrganizationArtifactName
 import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 
 import scala.language.implicitConversions
@@ -24,9 +24,10 @@ final case class RichGroupArtifactID private[sbt](organization: String, name: St
 }
 
 object RichGroupArtifactID {
-  implicit def from(g: GroupArtifactID): RichGroupArtifactID = {
+  implicit def from(g: OrganizationArtifactName): RichGroupArtifactID = {
     val moduleID = g % "1.0.0"
     RichGroupArtifactID(moduleID.organization, moduleID.name)
   }
+
   implicit def from(m: ModuleID): RichGroupArtifactID = RichGroupArtifactID(m.organization, m.name)
 }

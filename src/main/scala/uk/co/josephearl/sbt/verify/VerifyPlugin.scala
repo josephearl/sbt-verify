@@ -21,7 +21,7 @@ object VerifyPlugin extends AutoPlugin {
 
     def verifyJarsTask[T](key: TaskKey[T]): Initialize[Task[Seq[File]]] = VerifyPlugin.verifyJarsTask(key)
 
-    implicit def verifyToRichGroupArtifactID(g: sbt.impl.GroupArtifactID): RichGroupArtifactID = RichGroupArtifactID.from(g)
+    implicit def verifyToRichGroupArtifactID(g: sbt.librarymanagement.DependencyBuilders.OrganizationArtifactName): RichGroupArtifactID = RichGroupArtifactID.from(g)
 
     implicit def verifyToRichGroupArtifactID(m: sbt.ModuleID): RichGroupArtifactID = RichGroupArtifactID.from(m)
 
@@ -75,8 +75,8 @@ object VerifyPlugin extends AutoPlugin {
       includeDependency = true,
       excludedJars = Nil
     ),
-    fullClasspath in verify <<= fullClasspath or (fullClasspath in Runtime),
-    externalDependencyClasspath in verify <<= externalDependencyClasspath or (externalDependencyClasspath in Runtime),
+    fullClasspath in verify := (fullClasspath or (fullClasspath in Runtime)).value,
+    externalDependencyClasspath in verify := (externalDependencyClasspath or (externalDependencyClasspath in Runtime)).value,
 
     // verifyGenerate
     verifyGenerate := verifyGenerateTask(verifyGenerate).value,
@@ -90,8 +90,8 @@ object VerifyPlugin extends AutoPlugin {
       includeDependency = true,
       excludedJars = Nil
     ),
-    fullClasspath in verifyGenerate <<= fullClasspath or (fullClasspath in Runtime),
-    externalDependencyClasspath in verifyGenerate <<= externalDependencyClasspath or (externalDependencyClasspath in Runtime)
+    fullClasspath in verifyGenerate := (fullClasspath or (fullClasspath in Runtime)).value,
+    externalDependencyClasspath in verifyGenerate := (externalDependencyClasspath or (externalDependencyClasspath in Runtime)).value
   )
 
   override def requires = sbt.plugins.JvmPlugin
