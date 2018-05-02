@@ -20,4 +20,4 @@ cache:
   - C:\sbt\
   - C:\Users\appveyor\.m2
   - C:\Users\appveyor\.ivy2
-  - C:\Program Files\Java\jdk1.7.0\src.zip
+  - C:\Program Files\Java\jdk1.8.0\src.zip
