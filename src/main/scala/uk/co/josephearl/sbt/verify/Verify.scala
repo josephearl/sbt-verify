@@ -80,7 +80,7 @@ object Verify {
 
   def verifyJars(classpath: Classpath, dependencies: Classpath,
                  options: VerifyOptions, log: Logger): Seq[File] = {
-    import sbt.classpath.ClasspathUtilities
+    import sbt.internal.inc.classpath.ClasspathUtilities
 
     val (libs, dirs) = classpath.toVector.partition(c => ClasspathUtilities.isArchive(c.data))
 

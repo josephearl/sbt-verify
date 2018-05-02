@@ -5,7 +5,6 @@ cache:
         - $HOME/.ivy2/cache
 language: scala
 scala:
-    - 2.10.4
-    - 2.10.5
+    - 2.12.5
 script:
     - sbt ++$TRAVIS_SCALA_VERSION test scripted
