@@ -14,19 +14,24 @@ import sbt.Keys.Classpath
 import sbt._
 import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 
+import scala.util.{Success, Try}
+
 object Verify {
   def verify(jars: Seq[File], verifications: Seq[VerifyID],
              options: VerifyOptions, log: Logger): Unit = {
     var remaining: Seq[VerifyID] = verifications
     val verified: Seq[Tuple2[File, VerifyID]] = jars.flatMap(f => {
-      val matchingVerifications = remaining.filter(v => v.shouldVerifyFile(f, log))
-      matchingVerifications match {
-        case Seq(verifyId) =>
-          verifyId.verifyFile(f, options, log)
-          remaining = verifications diff Seq(verifyId)
-          Some(f, verifyId)
-        case Nil => None
-        case _ => None
+      val matchingVerifications = remaining.filter(_.shouldVerifyFile(f, log))
+      val successVerifications = matchingVerifications.map { mv =>
+        Try {
+          mv.verifyFile(f, options, log)
+          mv
+        }
+      }.collect { case Success(mv) => mv }
+
+      successVerifications.headOption.map { verifyId =>
+        remaining = verifications diff Seq(verifyId)
+        (f, verifyId)
       }
     })
 
