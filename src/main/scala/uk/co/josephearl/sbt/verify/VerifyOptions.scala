@@ -8,7 +8,7 @@
  */
 package uk.co.josephearl.sbt.verify
 
-import sbt.Keys._
+import sbt.Keys.Classpath
 
 case class VerifyOptions(
                           // include compiled jars from sub-projects

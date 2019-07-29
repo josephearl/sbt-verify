@@ -13,90 +13,85 @@ import sbt.Keys._
 import sbt._
 
 object VerifyPlugin extends AutoPlugin {
+  val pluginName = "sbt-verify"
 
-  object autoImport extends VerifyKeys {
-    def verifyTask(key: TaskKey[Unit]): Initialize[Task[Unit]] = VerifyPlugin.verifyTask(key)
+  object autoImport extends VerifyKeys
 
-    def verifyGenerateTask(key: TaskKey[File]): Initialize[Task[File]] = VerifyPlugin.verifyGenerateTask(key)
-
-    def verifyJarsTask[T](key: TaskKey[T]): Initialize[Task[Seq[File]]] = VerifyPlugin.verifyJarsTask(key)
-
-    implicit def verifyToRichGroupArtifactID(g: sbt.librarymanagement.DependencyBuilders.OrganizationArtifactName): RichGroupArtifactID = RichGroupArtifactID.from(g)
-
-    implicit def verifyToRichGroupArtifactID(m: sbt.ModuleID): RichGroupArtifactID = RichGroupArtifactID.from(m)
-
-    val VerifyOptions = uk.co.josephearl.sbt.verify.VerifyOptions
-    val VerifyID = uk.co.josephearl.sbt.verify.VerifyID
-    val baseVerifySettings = VerifyPlugin.baseVerifySettings
-  }
-
-  import autoImport.{baseVerifySettings => _, verifyJarsTask => _, verifyTask => _, _}
+  import autoImport._
 
   def verifyTask(key: TaskKey[Unit]): Initialize[Task[Unit]] = Def.task {
-    val t = (test in key).value
+    val time0 = System.nanoTime
     val s = (streams in key).value
-    Verify.verify(
+    val logger = new VerifyLogger(s.log, pluginName, baseDirectory.value.getName)
+    val output = Verify.verify(
       (verifyJars in key).value,
       (verifyDependencies in key).value,
-      (verifyOptions in key).value,
-      s.log)
-  }
-
-  def verifyGenerateTask(key: TaskKey[File]): Initialize[Task[File]] = Def.task {
-    val t = (test in key).value
-    val s = (streams in key).value
-    Verify.verifyGenerate(
-      (verifyJars in key).value,
-      (verifyOutputFile in key).value,
       (verifyAlgorithm in key).value,
       (verifyOptions in key).value,
       baseDirectory.value,
-      s.log)
+      logger)
+
+    val duration = (System.nanoTime - time0) / 1e9d
+    logger.info(s"Time taken to verify: [$duration seconds]")
+    output
+  }
+
+  def verifyGenerateTask(key: TaskKey[File]): Initialize[Task[File]] = Def.task {
+    val time0 = System.nanoTime
+    val s = (streams in key).value
+    val logger = new VerifyLogger(s.log, pluginName, baseDirectory.value.getName)
+    val output = Verify.verifyGenerate(
+      (verifyJars in key).value,
+      (verifyGenerateOutputFile in key).value,
+      (verifyAlgorithm in key).value,
+      (verifyOptions in key).value,
+      baseDirectory.value,
+      logger)
+
+    val duration = (System.nanoTime - time0) / 1e9d
+    logger.info(s"Time taken to verifyGenerate: [$duration seconds]")
+    output
   }
 
   def verifyJarsTask[T](key: TaskKey[T]): Initialize[Task[Seq[File]]] = Def.task {
     val s = (streams in key).value
+    val logger = new VerifyLogger(s.log, pluginName, baseDirectory.value.getName)
     Verify.verifyJars(
       (fullClasspath in key).value,
       (externalDependencyClasspath in key).value,
       (verifyOptions in key).value,
-      s.log)
+      logger)
   }
 
   lazy val baseVerifySettings: Seq[Def.Setting[_]] = Seq(
     // verify
     verify := verifyTask(verify).value,
     verifyDependencies in verify := Nil,
+    verifyAlgorithm in verify := HashAlgorithm.SHA1,
     verifyJars in verify := verifyJarsTask(verify).value,
-    test in verify := (test in Test).value,
-    verifyOptions in verify := VerifyOptions(
-      includeBin = true,
-      includeScala = true,
-      includeDependency = true,
-      excludedJars = Nil
-    ),
+    verifyOptions in verify := VerifyOptions(),
     fullClasspath in verify := (fullClasspath or (fullClasspath in Runtime)).value,
     externalDependencyClasspath in verify := (externalDependencyClasspath or (externalDependencyClasspath in Runtime)).value,
 
     // verifyGenerate
     verifyGenerate := verifyGenerateTask(verifyGenerate).value,
-    verifyOutputFile in verifyGenerate := crossTarget(_ / "verify.sbt").value,
+    verifyGenerateOutputFile in verifyGenerate := baseDirectory(_ / "verify.sbt").value,
     verifyAlgorithm in verifyGenerate := HashAlgorithm.SHA1,
     verifyJars in verifyGenerate := verifyJarsTask(verifyGenerate).value,
-    test in verifyGenerate := (test in Test).value,
-    verifyOptions in verifyGenerate := VerifyOptions(
-      includeBin = true,
-      includeScala = true,
-      includeDependency = true,
-      excludedJars = Nil
-    ),
+    verifyOptions in verifyGenerate := VerifyOptions(),
     fullClasspath in verifyGenerate := (fullClasspath or (fullClasspath in Runtime)).value,
     externalDependencyClasspath in verifyGenerate := (externalDependencyClasspath or (externalDependencyClasspath in Runtime)).value
   )
 
   override def requires = sbt.plugins.JvmPlugin
 
-  override def trigger = allRequirements
+  /*
+   * Set the trigger to noTrigger so that the consumer can be explicit about enabling this plugin for the projects
+   * that require it.
+   * When there are multiple projects, some of them may not require verification of libraries. Leave it to the user
+   * to determine where this plugin is needed.
+   */
+  override def trigger = noTrigger
 
   override lazy val projectSettings: Seq[Def.Setting[_]] = baseVerifySettings
 }

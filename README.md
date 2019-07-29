@@ -19,19 +19,19 @@ gson-2.6.2.pom.md5
 gson-2.6.2.pom.sha1
 ```
 
-When sbt/Ivy downloads the artifact it also retrieves the checksum files for each file and verifies that the downloaded file matches the SHA1/MD5 stored in the checksum file.
+When sbt/Ivy/Coursier downloads the artifact it also retrieves the checksum files for each file and verifies that the downloaded file matches the SHA1/MD5 stored in the checksum file.
 However this serves only to verify that the file was downloaded correctly - if someone is able to compromise the remote Maven repository they could easily alter the MD5 and SHA1 checksum values the repository advertises as well as the artifact itself.
 
 The sbt-verify allows you to statically specify the SHA1 or MD5 checksum that a dependency should match through the `verifyDependencies` setting:
 
 ```scala
-scalaVersion = "2.12.5"
+scalaVersion = "2.12.8"
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.6.2"
 
 verifyDependencies in verify ++= Seq(
-  "org.scala-lang" % "scala-library" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
-  "com.google.code.gson" % "gson" sha1 "17484370291d4a8191344ec4930a1c655b1d15e2"
+  "org.scala-lang" % "scala-library" SHA1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
+  "com.google.code.gson" % "gson" SHA1 "17484370291d4a8191344ec4930a1c655b1d15e2"
 )
 ```
 
@@ -51,20 +51,37 @@ sbt publishLocal
 Add sbt-verify as a plugin in your project's `project/plugins.sbt`:
 
 ```scala
-addSbtPlugin("uk.co.josephearl" % "sbt-verify" % "0.3.0")
+addSbtPlugin("uk.co.josephearl" % "sbt-verify" % "0.4.0")
 ```
 
 ## Usage
 
+### Enabling sbt-verify in your project
+
+SBT verify must be explicitly enabled on the projects you wish to use it for.
+
+In `project/plugins.sbt`:
+```scala
+addSbtPlugin("uk.co.josephearl" % "sbt-verify" % "0.4.0")
+```
+
+In `build.sbt`:
+```scala
+lazy val root = (project in file("."))
+  .enablePlugins(VerifyPlugin)
+```
+
 ### Verifying dependencies
 
-To verify your project's dependencies first list all of your dependencies together with the hash (`sha1` or `md5`) using the `verifyOptions in verify` setting:
+To verify your project's dependencies first list all of your dependencies and specify the algorithm to be used to verify the hashes:
 
 ```scala
 verifyDependencies in verify ++= Seq(
-  "org.scala-lang" % "scala-library" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
-  "com.google.guava" % "guava" sha1 "6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9"
+  "org.scala-lang" % "scala-library" SHA1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
+  "com.google.guava" % "guava" SHA1 "6ce200f6b23222af3d8abb6b6459e6c44f4bb0e9"
 )
+
+verifyAlgorithm in verify := HashAlgorithm.SHA1
 ```
 
 Run the `verify` task to verify all downloaded dependencies have the correct hash.
@@ -83,13 +100,13 @@ You can generate a `verify.sbt` file containing the `verifyDependencies` for all
 
 If you want to configure options for generating, set the `verifyOptions in verifyGenerate` in your `build.sbt`. This will generate a corresponding `verifyOptions in verify` in the generated `verify.sbt`.
 
-The `verify.sbt` file is generated in the cross-target directory, you can change this using the `verifyOutputFile` setting:
+The `verify.sbt` file is generated in the base directory. You can change this using the `verifyGenerateOutputFile` setting:
 
 ```scala
-verifyOutputFile in verifyGenerate := baseDirectory.value / "verify.sbt"
+verifyGenerateOutputFile in verifyGenerate := crossTarget.value / "verify.sbt"
 ```
 
-To change the hashing algorithm used when generating the file from the default (`sha1`) use the `verifyAlgorithm` setting:
+To change the hashing algorithm used when generating the file from the default (`SHA1`) use the `verifyAlgorithm` setting:
 
 ```scala
 verifyAlgorithm in verifyGenerate := HashAlgorithm.MD5
@@ -97,27 +114,38 @@ verifyAlgorithm in verifyGenerate := HashAlgorithm.MD5
 
 ## Settings
 
-### `verifyOptions`
-* *Description:* Set the options for `verify` and `verifyGenerate`.
+### `verifyOptions` in `verify`, `verifyGenerate`
+* *Description:* Set the options to generate or verify dependencies.
 * *Accepts:* `VerifyOptions`
-* *Default:* `VerifyOptions(includeBin = true, includeScala = true, includeDependency = true, excludedJars = Nil)`
+* *Default:*
+```
+VerifyOptions(
+    includeBin = true, 
+    includeScala = true, 
+    includeDependency = true, 
+    excludedJars = Nil,
+    warnOnUnverifiedFiles = false,
+    warnOnUnusedVerifications = false
+)
+```
 
-### `verifyDependencies`
+### `verifyAlgorithm` in `verify`, `verifyGenerate`
+* *Description:* Hash algorithm to use when generating or verifying hashes for dependencies.
+* *Tasks:* `verifyGenerate`
+* *Accepts:* `HashAlgorithm.{SHA1, MD5}`
+* *Default:* `HashAlgorithm.SHA1`
+
+### `verifyDependencies` in `verify`
 * *Description:* List of dependencies and hashes to use for `verify`.
 * *Accepts:* `Seq(VerifyID)`
 * *Default:* `Nil`
 
-### `verifyOutputFile`
+### `verifyGenerateOutputFile` in `verifyGenerate`
 * *Description:* File to write verifications to when running `verifyGenerate`.
 * *Tasks:* `verifyGenerate`
 * *Accepts:* `File`
-* *Default:* `crossTarget(_ / "verify.sbt").value`
+* *Default:* `baseDirectory(_ / "verify.sbt").value`
 
-### `verifyAlgorithm`
-* *Description:* Algorithm to use when generating verifications with `verifyGenerate`.
-* *Tasks:* `verifyGenerate`
-* *Accepts:* `HashAlgorithm.{SHA1, MD5}`
-* *Default:* `HashAlgorithm.SHA1`
 
 ## Related projects
 

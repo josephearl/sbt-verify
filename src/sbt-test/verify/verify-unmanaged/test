@@ -1,2 +1,5 @@
-# Verify dependencies
+# Generate then verify dependencies using generated file
+> verifyGenerate
+$ exists verify.sbt
+> reload
 > verify

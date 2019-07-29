@@ -1,2 +1,3 @@
 # Verify dependencies
+# The + ensures that the command is run for every cross Scala version
 > + verify

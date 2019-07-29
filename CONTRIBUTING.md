@@ -15,3 +15,4 @@ Every pull request will be built with Travis CI.
 ## Contributors
 
 * [@josephearl](https://github.com/JosephEarl) - Joseph Earl
+* [@kunalkapoor](https://github.com/kunalkapoor) - Kunal Kapoor

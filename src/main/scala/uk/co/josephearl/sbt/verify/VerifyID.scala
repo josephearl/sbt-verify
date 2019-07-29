@@ -12,61 +12,45 @@ import java.io.File
 import java.nio.file.Paths
 
 import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
-import sbt.Logger
 
-final case class VerifyID(organization: String, name: String, hash: String, algorithm: HashAlgorithm = HashAlgorithm.SHA1) {
-  def algorithm(algorithm: String): VerifyID = this.copy(algorithm = HashAlgorithm.withName(algorithm))
+import scala.util.Try
+import scala.xml.{Elem, XML}
 
-  def algorithm(algorithm: HashAlgorithm): VerifyID = this.copy(algorithm = algorithm)
 
-  def shouldVerifyFile(file: File, log: Logger): Boolean = {
-    matchesOrganization(file) && matchesName(file)
-  }
-
-  def verifyFile(file: File, options: VerifyOptions, log: Logger): Boolean = {
-    val actual = algorithm.fileContentHash(file).toLowerCase
-    val expected = hash.toLowerCase
-    val matches = actual == expected
-    // TODO: option to not throw error here?
-    matches match {
-      case false  => throw VerifyException(s"Hash '$actual' did not match expected '$expected' using algorithm '${algorithm.algorithm}' for file '${file.getAbsolutePath}'")
-      case true   => true
-    }
-  }
+final case class VerifyID(organization: String,
+                          name: String,
+                          hash: String,
+                          algorithm: HashAlgorithm = HashAlgorithm.SHA1) extends Ordered[VerifyID] {
 
   def asSbtSettingString: String = "\"%s\" %% \"%s\" %s \"%s\"".format(organization.replace("\\", "\\\\"), name, algorithm.algorithm, hash)
 
-  private def matchesOrganization(file: File): Boolean = {
-    file.getAbsolutePath.contains(organization) ||
-      (VerifyUtils.isScalaLibraryFile(file) && organization == "org.scala-lang" && file.getAbsolutePath.contains(s"${File.separator}global${File.separator}boot${File.separator}"))
-  }
-
-  private def matchesName(file: File): Boolean = {
-    file.getName.contains(name)
-  }
+  override def compare(that: VerifyID): Int = this.toString compare that.toString
 }
 
 object VerifyID {
   def fromFile(file: File, algorithm: HashAlgorithm, projectBase: File): VerifyID = {
-    val path = file.getParentFile.getAbsolutePath
-    val filename = file.getName
     VerifyID(
-      toOrganization(path, projectBase.getAbsolutePath),
-      toName(path, filename),
+      toOrganization(file, projectBase.getAbsolutePath),
+      toName(file),
       algorithm.fileContentHash(file),
       algorithm
     )
   }
 
-  private def toOrganization(path: String, projectBase: String): String = {
-    inIvyCache(path, ivyCacheOrganization(path, _))
-      .getOrElse(Paths.get(projectBase).relativize(Paths.get(path)).toString)
+  private def toOrganization(jarFile: File, projectBase: String): String = {
+    val parentPath = jarFile.getParentFile.getAbsolutePath
+    inPomFile(jarFile, pomOrganization)
+      .orElse(inIvyCache(parentPath, ivyCacheOrganization(parentPath, _)))
+      .getOrElse(Paths.get(projectBase).relativize(Paths.get(parentPath)).toString)
   }
 
-  private def toName(path: String, filename: String): String = {
-    inIvyCache(path, ivyCacheName(path, _))
-      .getOrElse(filenameName(filename))
+  private def toName(jarFile: File): String = {
+    val parentPath = jarFile.getParentFile.getAbsolutePath
+    inPomFile(jarFile, pomName)
+      .orElse(inIvyCache(parentPath, ivyCacheName(parentPath, _)))
+      .getOrElse(filenameName(jarFile.getName))
   }
+
 
   private def inIvyCache(path: String, in: Int => String): Option[String] = {
     val ivyCacheDir: String = s"ivy2${File.separator}cache${File.separator}"
@@ -84,6 +68,31 @@ object VerifyID {
     path.substring(path.indexOf(File.separator, x) + 1, path.indexOf(File.separator, path.indexOf(File.separator, x) + 1))
       .replaceFirst("_(\\d+\\.)?(\\d+\\.)?(\\d+)$", "")
   }
+
+  // Coursier generates a POM file for every dependency, so we first check for a POM file before checking the IVY cache
+  private def inPomFile(jarFile: File, in: Elem => Option[String]): Option[String] = {
+    jarFile
+      .getParentFile
+      .listFiles()
+      .find(_.getName.endsWith(".pom"))
+      .flatMap(pomFile => Try(XML.loadFile(pomFile)).toOption)
+      .flatMap(in)
+  }
+
+  private def pomOrganization(pomXml: Elem): Option[String] = {
+    // Sub-projects don't have their own "groupId" and inherit this from their "parent"
+    (pomXml \ "groupId")
+      .headOption
+      .orElse((pomXml \ "parent" \ "groupId").headOption)
+      .map(_.text)
+  }
+
+  private def pomName(pomXml: Elem): Option[String] = {
+    (pomXml \ "artifactId")
+      .headOption
+      .map(_.text)
+  }
+
 
   private def filenameName(filename: String): String = {
     stripVersion(stripExtension(filename))
