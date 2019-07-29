@@ -1,0 +1,2 @@
+# Verify build passes when there are unverified files but VerifyOptions is set to warn only
+> verify

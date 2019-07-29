@@ -15,9 +15,9 @@ import uk.co.josephearl.sbt.verify.HashAlgorithm.HashAlgorithm
 import scala.language.implicitConversions
 
 final case class RichGroupArtifactID private[sbt](organization: String, name: String) {
-  def sha1(hash: String): VerifyID = toVerifyID(hash, HashAlgorithm.SHA1)
+  def SHA1(hash: String): VerifyID = toVerifyID(hash, HashAlgorithm.SHA1)
 
-  def md5(hash: String): VerifyID = toVerifyID(hash, HashAlgorithm.MD5)
+  def MD5(hash: String): VerifyID = toVerifyID(hash, HashAlgorithm.MD5)
 
   private def toVerifyID(hash: String, hashAlgorithm: HashAlgorithm): VerifyID =
     VerifyID(organization, name, hash, hashAlgorithm)

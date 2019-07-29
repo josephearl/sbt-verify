@@ -1,11 +1,12 @@
-name := "verify-scala"
+lazy val root = (project in file("."))
+    .enablePlugins(VerifyPlugin)
+    .settings(
+      name := "verify-scala",
+      organization := "uk.co.josephearl",
+      version := "0.2.0",
+      scalaVersion := "2.10.4",
 
-organization := "uk.co.josephearl"
+      verifyDependencies in verify += "org.scala-lang" % "scala-library" SHA1 "9aae4cb1802537d604e03688cab744ff47b31a7d",
 
-version := "0.2.0"
-
-scalaVersion := "2.10.4"
-
-verifyDependencies in verify += "org.scala-lang" % "scala-library" sha1 "9aae4cb1802537d604e03688cab744ff47b31a7d"
-
-verifyOptions in verify := VerifyOptions(includeBin = false, includeScala = true, includeDependency = false)
+      verifyOptions in verify := VerifyOptions(includeBin = false, includeScala = true, includeDependency = false)
+    )
